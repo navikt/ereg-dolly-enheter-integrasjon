@@ -31,20 +31,6 @@ public class NaisApi {
               }
             }
             """;
-    private static final String kjøringsInstruks = """
-            mutation startDollyJob($job: String!, $runName: String!, $environment: String!) {
-              triggerJob (input: {
-                name: $job,
-                teamSlug: "arbeidsforhold",
-                environmentName: $environment,
-                runName: $runName
-              }) {
-                jobRun {
-                  name
-                }
-              }
-            }
-            """;
 
     private static final String listeEksisterendekjøringer = """
             query JobRunsList($job: String!, $environment: String!) {
