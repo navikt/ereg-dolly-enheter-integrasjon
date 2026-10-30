@@ -80,8 +80,5 @@ public class NaisApi {
         }
         argumenter.put("dataUri", "data:application/octet-stream;base64," + filData);
         graphqlClient.document(settVariabler).variables(argumenter).execute().block();
-        argumenter.remove("dataUri");
-        argumenter.put("runName", JOBB_PREFIKS + auraMiljø + "for-dolly-" + Instant.now().getEpochSecond());
-        graphqlClient.document(kjøringsInstruks).variables(argumenter).execute().block();
     }
 }
