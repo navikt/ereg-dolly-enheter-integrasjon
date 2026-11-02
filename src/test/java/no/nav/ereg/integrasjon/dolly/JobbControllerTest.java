@@ -126,4 +126,61 @@ class JobbControllerTest {
         final ResponseEntity<Void> response = testClient.postForEntity("/api/start", new byte[1], Void.class);
         assertTrue(response.getStatusCode().isError());
     }
+
+    @Test
+    void feilSendesVidere() {
+        stubFor(post("/graphql")
+                .withRequestBody(containing("JobRunsList"))
+                .willReturn(okJson("""
+                        {
+                          "data": {
+                            "team": {
+                              "environment": {
+                                "job": {
+                                  "runs": {
+                                    "edges": [
+                                      {
+                                        "node": {
+                                          "status": {
+                                            "state": "SUCCEEDED"
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "node": {
+                                          "status": {
+                                            "state": "SUCCEEDED"
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "node": {
+                                          "status": {
+                                            "state": "FAILED"
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                        """)));
+        stubFor(post("/graphql").withRequestBody(containing("setUpDollyJob")).willReturn(okJson("""
+                {
+                  "data": {
+                    "job": {
+                      "id": "abcde"
+                    }
+                  },
+                  "error": {
+                    "message": "Temporary error"
+                  }
+                }
+                """)));
+        final ResponseEntity<Void> response = testClient.postForEntity("/api/start", new byte[1], Void.class);
+        assertTrue(response.getStatusCode().isError());
+    }
 }
