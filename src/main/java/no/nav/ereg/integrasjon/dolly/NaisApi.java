@@ -1,16 +1,21 @@
 package no.nav.ereg.integrasjon.dolly;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.graphql.client.HttpGraphQlClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import tools.jackson.databind.JsonNode;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Component
+@Slf4j
 public class NaisApi {
+    private static final String GRAPHQL_SEGMENT = "/graphql";
+
     private final HttpGraphQlClient graphqlClient;
     private static final String JOBB_PREFIKS = "ereg-ajourholdsfiler-lasting-enheter-";
     private static final String settVariabler = """
@@ -24,6 +29,7 @@ public class NaisApi {
                     name: "inputFileLocation",
                     value: $dataUri
                   }
+                ]
               }) {
                 job {
                   id
@@ -52,15 +58,24 @@ public class NaisApi {
             }
             """;
 
-    public NaisApi() {
-        graphqlClient = HttpGraphQlClient.builder(WebClient.builder().baseUrl("https://console.nav.cloud.nais.io/graphql").build()).build();
+    public NaisApi(@Value("${nais.api.url}") String naisUrl) {
+        graphqlClient = HttpGraphQlClient.builder(WebClient.builder().baseUrl(naisUrl + GRAPHQL_SEGMENT).build()).build();
+    }
+
+    public static List<JobbKjøringStatus> fraJson(final JsonNode jsonNode) {
+        try {
+            return jsonNode.map(array -> array.asArray().elements().stream().map(node -> JobbKjøringStatus.valueOf(node.get("node").get("status").get("state").stringValue(JobbKjøringStatus.UNKNOWN.name()))).toList());
+        } catch (RuntimeException e) {
+            log.warn("Fant ikke forventede elementer i {}", jsonNode);
+            throw e;
+        }
     }
 
     public void startBatch(final String filData, final String cluster, final String auraMiljø) {
         final Map<String, Object> argumenter = new HashMap<>();
         argumenter.put("environment", cluster);
         argumenter.put("job", JOBB_PREFIKS + auraMiljø);
-        final List<JobbKjøringStatus> respons = graphqlClient.document(listeEksisterendekjøringer).variables(argumenter).retrieve("team.environment.job.runs.edges[*].node.status.state").toEntityList(JobbKjøringStatus.class).block();
+        final List<JobbKjøringStatus> respons = graphqlClient.document(listeEksisterendekjøringer).variables(argumenter).retrieve("team.environment.job.runs.edges").toEntity(JsonNode.class).map(NaisApi::fraJson).block();
         if (respons != null && respons.stream().anyMatch(JobbKjøringStatus::kanVæreIGang)) {
             throw new IllegalStateException("Jobb er allerede i gang");
         }
