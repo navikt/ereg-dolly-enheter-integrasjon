@@ -175,9 +175,11 @@ class JobbControllerTest {
                       "id": "abcde"
                     }
                   },
-                  "error": {
-                    "message": "Temporary error"
-                  }
+                  "errors": [
+                    {
+                      "message": "Temporary error"
+                    }
+                  ]
                 }
                 """)));
         final ResponseEntity<Void> response = testClient.postForEntity("/api/start", new byte[1], Void.class);

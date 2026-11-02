@@ -2,6 +2,7 @@ package no.nav.ereg.integrasjon.dolly;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.graphql.client.ClientGraphQlResponse;
 import org.springframework.graphql.client.HttpGraphQlClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -80,6 +81,9 @@ public class NaisApi {
             throw new IllegalStateException("Jobb er allerede i gang");
         }
         argumenter.put("dataUri", "data:application/octet-stream;base64," + filData);
-        graphqlClient.document(settVariabler).variables(argumenter).execute().block();
+        final ClientGraphQlResponse oppdatering = graphqlClient.document(settVariabler).variables(argumenter).execute().block();
+        if (oppdatering == null || !oppdatering.isValid()) {
+            throw new RuntimeException("Feil i kall til Nais, " + (oppdatering == null ? null : oppdatering.getErrors()));
+        }
     }
 }
