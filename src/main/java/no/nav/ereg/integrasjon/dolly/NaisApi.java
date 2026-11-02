@@ -5,12 +5,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.graphql.client.ClientGraphQlResponse;
 import org.springframework.graphql.client.HttpGraphQlClient;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.WebClient;
 import tools.jackson.databind.JsonNode;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Component
 @Slf4j
@@ -59,8 +64,22 @@ public class NaisApi {
             }
             """;
 
-    public NaisApi(@Value("${nais.api.url}") String naisUrl) {
-        graphqlClient = HttpGraphQlClient.builder(WebClient.builder().baseUrl(naisUrl + GRAPHQL_SEGMENT).build()).build();
+    public NaisApi(@Value("${nais.api.url}") final String naisUrl, @Value("${NAIS_SERVICE_ACCOUNT_TOKEN_PATH}") final String naisTokenSti) {
+        graphqlClient = HttpGraphQlClient.builder(WebClient.builder().baseUrl(naisUrl + GRAPHQL_SEGMENT)
+                .filter((request, next) -> next.exchange(ClientRequest.from(request)
+                        .headers(headers -> headers.setBearerAuth(hentToken(naisTokenSti))).build()))
+                .build()
+        ).build();
+    }
+
+    private String hentToken(final String naisTokenSti) {
+        try {
+            try (final Stream<String> linjer = Files.lines(Path.of(naisTokenSti))) {
+                return linjer.findFirst().orElseThrow();
+            }
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static List<JobbKjøringStatus> fraJson(final JsonNode jsonNode) {
