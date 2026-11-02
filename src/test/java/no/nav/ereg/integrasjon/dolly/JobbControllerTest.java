@@ -79,7 +79,7 @@ class JobbControllerTest {
 
     @Test
     public void kjørerIkkeHvisAlleredeKjører() {
-        stubFor(post("/graphql").withRequestBody(matchingJsonPath("$.operationName", equalTo("JobRunsList"))).willReturn(okJson("""
+        stubFor(post("/graphql").withRequestBody(containing("JobRunsList")).willReturn(okJson("""
                 {
                   "data": {
                     "team": {
