@@ -82,7 +82,7 @@ public class NaisApi {
         }
         argumenter.put("dataUri", "data:application/octet-stream;base64," + filData);
         final ClientGraphQlResponse oppdatering = graphqlClient.document(settVariabler).variables(argumenter).execute().block();
-        if (oppdatering == null || !oppdatering.isValid()) {
+        if (oppdatering == null || !oppdatering.isValid() || !oppdatering.getErrors().isEmpty()) {
             throw new RuntimeException("Feil i kall til Nais, " + (oppdatering == null ? null : oppdatering.getErrors()));
         }
     }
