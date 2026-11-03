@@ -1,17 +1,21 @@
 package no.nav.ereg.integrasjon.dolly;
 
+import io.netty.channel.ChannelOption;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.graphql.client.ClientGraphQlResponse;
 import org.springframework.graphql.client.HttpGraphQlClient;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
 import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +71,13 @@ public class NaisApi {
     public NaisApi(@Value("${nais.api.url}") final String naisUrl, @Value("${NAIS_SERVICE_ACCOUNT_TOKEN_PATH}") final String naisTokenSti) {
         graphqlClient = HttpGraphQlClient.builder(WebClient.builder().baseUrl(naisUrl + GRAPHQL_SEGMENT)
                 .filter((request, next) -> next.exchange(ClientRequest.from(request)
-                        .headers(headers -> headers.setBearerAuth(hentToken(naisTokenSti))).build()))
+                        .headers(headers -> headers.setBearerAuth(hentToken(naisTokenSti))).build())
+                )
+                .clientConnector(
+                        new ReactorClientHttpConnector(HttpClient.create()
+                                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+                                .responseTimeout(Duration.ofSeconds(30)))
+                )
                 .build()
         ).build();
     }
