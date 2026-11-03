@@ -101,13 +101,13 @@ public class NaisApi {
         }
     }
 
-    public void startBatch(final String filData, final String cluster, final String auraMiljø) {
+    public void startBatch(final String filData, final String cluster, final String auraMiljø) throws JobbKjørerAlleredeException {
         final Map<String, Object> argumenter = new HashMap<>();
         argumenter.put("environment", cluster);
         argumenter.put("job", JOBB_PREFIKS + auraMiljø);
         final List<JobbKjøringStatus> respons = graphqlClient.document(listeEksisterendekjøringer).variables(argumenter).retrieve("team.environment.job.runs.edges").toEntity(JsonNode.class).map(NaisApi::fraJson).block();
         if (respons != null && respons.stream().anyMatch(JobbKjøringStatus::kanVæreIGang)) {
-            throw new IllegalStateException("Jobb er allerede i gang");
+            throw new JobbKjørerAlleredeException();
         }
         argumenter.put("dataUri", "data:application/octet-stream;base64," + filData);
         final ClientGraphQlResponse oppdatering = graphqlClient.document(settVariabler).variables(argumenter).execute().block();

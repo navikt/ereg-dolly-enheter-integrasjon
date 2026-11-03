@@ -18,7 +18,7 @@ public class JobbController {
 
     @PostMapping(value = "/api/start")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    void start(final java.io.InputStream inputStream) throws IOException {
+    void start(final java.io.InputStream inputStream) throws IOException, JobbKjørerAlleredeException {
         final byte[] inputFile = inputStream.readNBytes(50_001);
         if (inputFile.length == 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is required");
