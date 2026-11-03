@@ -18,7 +18,11 @@ public class JobbController {
 
     @PostMapping(value = "/api/start")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    void start(@RequestBody final byte[] inputFile) throws IOException {
+    void start(final java.io.InputStream inputStream) throws IOException {
+        final byte[] inputFile = inputStream.readNBytes(50_001);
+        if (inputFile.length == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is required");
+        }
         if (inputFile.length > 50_000) {
             throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE, "Tar for nå kun imot mindre bestillinger");
         }
