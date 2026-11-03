@@ -4,5 +4,5 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${AZURE_OPENID_CONFIG_ISSUER}
-          audiences: ${AZURE_APP_CLIENT_ID}
+          issuer-uri: ${AZURE_OPENID_CONFIG_ISSUER:http://default.invalid}
+          audiences: ${AZURE_APP_CLIENT_ID:test-client-id}

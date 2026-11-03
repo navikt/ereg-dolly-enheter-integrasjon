@@ -7,8 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.wiremock.spring.ConfigureWireMock;
@@ -27,6 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         baseUrlProperties = "nais.api.url"
 ))
 @AutoConfigureTestRestTemplate
+@Import(TestSikkerhetsKonfigurasjon.class)
+@ActiveProfiles("test")
 class JobbControllerTest {
     @Autowired
     TestRestTemplate testClient;
