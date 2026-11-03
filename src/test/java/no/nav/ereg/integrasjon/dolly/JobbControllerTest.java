@@ -145,8 +145,11 @@ class JobbControllerTest {
                   }
                 }
                 """)));
+        resetAllRequests();
         final ResponseEntity<Void> response = testClient.postForEntity("/api/start", new byte[1], Void.class);
         assertTrue(response.getStatusCode().isError());
+        verify(0, postRequestedFor(urlEqualTo("/graphql"))
+                .withRequestBody(containing("setUpDollyJob")));
     }
 
     @Test
