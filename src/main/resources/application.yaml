@@ -1,0 +1,8 @@
+nais.api.url: "https://console.nav.cloud.nais.io"
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AZURE_OPENID_CONFIG_ISSUER:http://default.invalid}
+          audiences: ${AZURE_APP_CLIENT_ID:test-client-id}
