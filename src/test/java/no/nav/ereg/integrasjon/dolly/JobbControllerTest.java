@@ -1,18 +1,22 @@
 package no.nav.ereg.integrasjon.dolly;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.jdbc.Sql;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.oracle.OracleContainer;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
 
@@ -25,13 +29,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Testcontainers
 @EnableWireMock(@ConfigureWireMock(
         baseUrlProperties = "nais.api.url"
 ))
 @AutoConfigureTestRestTemplate
 @Import(TestSikkerhetsKonfigurasjon.class)
+@Sql("classpath:db/create-tables.sql")
 @ActiveProfiles("test")
 class JobbControllerTest {
+
+    @Container
+    static OracleContainer oracle = new OracleContainer("gvenzl/oracle-free:23-slim").withInitScript("db/create-tables.sql");
+
     @Autowired
     TestRestTemplate testClient;
 
@@ -39,6 +49,7 @@ class JobbControllerTest {
     static Path tempDir;
 
     @DynamicPropertySource
+    @ServiceConnection
     static void dynamicProperties(DynamicPropertyRegistry registry) throws IOException {
         final Path fil = tempDir.resolve("test.token");
         Files.writeString(fil, "test-token");
@@ -202,7 +213,7 @@ class JobbControllerTest {
                   },
                   "errors": [
                     {
-                      "message": "Temporary error"
+                      "message": "Temporary error for testing purposes"
                     }
                   ]
                 }
