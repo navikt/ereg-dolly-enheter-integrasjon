@@ -6,3 +6,7 @@ spring:
         jwt:
           issuer-uri: ${AZURE_OPENID_CONFIG_ISSUER:http://default.invalid}
           audiences: ${AZURE_APP_CLIENT_ID:test-client-id}
+  config:
+    import:
+      - "optional:configtree:/var/run/secrets/oracle_config/"
+      - "optional:configtree:/var/run/secrets/oracle_creds/"

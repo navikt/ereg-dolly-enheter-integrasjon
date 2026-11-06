@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -24,11 +23,9 @@ import java.util.stream.Stream;
 @Component
 @Slf4j
 public class NaisApi {
-    private static final String GRAPHQL_SEGMENT = "/graphql";
-
+    public static final String GRAPHQL_SEGMENT = "/graphql";
     private final HttpGraphQlClient graphqlClient;
-    private static final String JOBB_PREFIKS = "ereg-ajourholdsfiler-lasting-enheter-";
-    private static final String settVariabler = """
+    public static final String SETT_VARIABLER = """
             mutation setUpDollyJob($job: String!, $dataUri: String!, $environment: String!) {
               updateJob (input: {
                 name: $job
@@ -47,8 +44,7 @@ public class NaisApi {
               }
             }
             """;
-
-    private static final String listeEksisterendekjøringer = """
+    public static final String LIST_EKSISTERENDE_KJØRINGER = """
             query JobRunsList($job: String!, $environment: String!) {
                 team(slug: "arbeidsforhold") {
                     environment(name: $environment) {
@@ -69,17 +65,7 @@ public class NaisApi {
             """;
 
     public NaisApi(@Value("${nais.api.url}") final String naisUrl, @Value("${NAIS_SERVICE_ACCOUNT_TOKEN_PATH}") final String naisTokenSti) {
-        graphqlClient = HttpGraphQlClient.builder(WebClient.builder().baseUrl(naisUrl + GRAPHQL_SEGMENT)
-                .filter((request, next) -> next.exchange(ClientRequest.from(request)
-                        .headers(headers -> headers.setBearerAuth(hentToken(naisTokenSti))).build())
-                )
-                .clientConnector(
-                        new ReactorClientHttpConnector(HttpClient.create()
-                                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
-                                .responseTimeout(Duration.ofSeconds(30)))
-                )
-                .build()
-        ).build();
+        graphqlClient = HttpGraphQlClient.builder(WebClient.builder().baseUrl(naisUrl + NaisApi.GRAPHQL_SEGMENT).filter((request, next) -> next.exchange(ClientRequest.from(request).headers(headers -> headers.setBearerAuth(hentToken(naisTokenSti))).build())).clientConnector(new ReactorClientHttpConnector(HttpClient.create().option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000).responseTimeout(Duration.ofSeconds(30)))).build()).build();
     }
 
     private String hentToken(final String naisTokenSti) {
@@ -101,18 +87,17 @@ public class NaisApi {
         }
     }
 
-    public void startBatch(final String filData, final String cluster, final String auraMiljø) throws JobbKjørerAlleredeException {
-        final Map<String, Object> argumenter = new HashMap<>();
-        argumenter.put("environment", cluster);
-        argumenter.put("job", JOBB_PREFIKS + auraMiljø);
-        final List<JobbKjøringStatus> respons = graphqlClient.document(listeEksisterendekjøringer).variables(argumenter).retrieve("team.environment.job.runs.edges").toEntity(JsonNode.class).map(NaisApi::fraJson).block();
-        if (respons != null && respons.stream().anyMatch(JobbKjøringStatus::kanVæreIGang)) {
-            throw new JobbKjørerAlleredeException();
-        }
-        argumenter.put("dataUri", "data:application/octet-stream;base64," + filData);
-        final ClientGraphQlResponse oppdatering = graphqlClient.document(settVariabler).variables(argumenter).execute().block();
+    public void oppdaterOgStartJobb(final Map<String, Object> argumenter) {
+        final ClientGraphQlResponse oppdatering = graphqlClient.document(SETT_VARIABLER).variables(argumenter).execute().block();
         if (oppdatering == null || !oppdatering.isValid() || !oppdatering.getErrors().isEmpty()) {
             throw new RuntimeException("Feil i kall til Nais, " + (oppdatering == null ? null : oppdatering.getErrors()));
+        }
+    }
+
+    public void sjekkAtJobbIkkeKjører(final Map<String, Object> argumenter) throws JobbKjørerAlleredeException {
+        final List<JobbKjøringStatus> respons = graphqlClient.document(LIST_EKSISTERENDE_KJØRINGER).variables(argumenter).retrieve("team.environment.job.runs.edges").toEntity(JsonNode.class).map(NaisApi::fraJson).block();
+        if (respons != null && respons.stream().anyMatch(JobbKjøringStatus::kanVæreIGang)) {
+            throw new JobbKjørerAlleredeException();
         }
     }
 }
