@@ -5,6 +5,9 @@ metadata:
   labels:
     team: arbeidsforhold
 spec:
+  azure:
+    application:
+      enabled: true
   replicas:
     max: 2
     min: 1
