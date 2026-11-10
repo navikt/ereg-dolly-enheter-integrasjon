@@ -7,3 +7,6 @@ spec:
         mountPath: /var/run/secrets/oracle_creds
       - kvPath: /oracle/data/dev/config/aareg_q1
         mountPath: /var/run/secrets/oracle_config
+  env:
+    - name: AURA_ENVIRONMENT
+      value: "q1"
