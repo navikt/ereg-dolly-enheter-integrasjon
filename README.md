@@ -2,7 +2,7 @@
 
 Dette er et minimalt API kun brukt av Dolly for å laste enheter inn i ereg, dette tar over jobben fra jenkins hos drift.
 
-APIet kaller igjen Nais API for å oppdatere batch-jobben ereg-ajourholdsfiler-lasting-enheter (-q1, -q2, og så videre).
+APIet kaller igjen Nais API for å oppdatere batch-jobben ereg-ajourholdsfiler-lasting-enheter (-q1, -q2, og -q4).
 
 Denne appen skal kun deployes i dev.
 
