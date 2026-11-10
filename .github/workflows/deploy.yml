@@ -39,7 +39,6 @@ jobs:
         id: docker-build-push
         with:
           team: arbeidsforhold
-          dockerfile: src/main/docker/Dockerfile
       - name: Deploy app til q1
         if: ${{ steps.docker-build-push.outputs.image }}
         run: nais apply .nais/naisapp.yaml --environment dev-fss --mixin .nais/naisapp-q1.yaml --set spec.image="${{steps.docker-build-push.outputs.image}}"
