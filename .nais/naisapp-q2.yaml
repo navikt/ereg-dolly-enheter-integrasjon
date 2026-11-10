@@ -1,0 +1,9 @@
+metadata:
+  name: ereg-dolly-enheter-integrasjon-q2
+spec:
+  vault:
+    paths:
+      - kvPath: /oracle/data/dev/creds/aareg_q2-user
+        mountPath: /var/run/secrets/oracle_creds
+      - kvPath: /oracle/data/dev/config/aareg_q2
+        mountPath: /var/run/secrets/oracle_config
