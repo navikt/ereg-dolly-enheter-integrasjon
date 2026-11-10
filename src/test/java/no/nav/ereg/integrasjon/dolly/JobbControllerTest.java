@@ -54,6 +54,7 @@ class JobbControllerTest {
         final Path fil = tempDir.resolve("test.token");
         Files.writeString(fil, "test-token");
         registry.add("NAIS_SERVICE_ACCOUNT_TOKEN_PATH", fil::toString);
+        registry.add("aura.environment", () -> "INTEGRASJONSTEST");
     }
 
     @BeforeAll
