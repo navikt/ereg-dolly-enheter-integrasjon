@@ -1,0 +1,21 @@
+apiVersion: nais.io/v1alpha1
+kind: Application
+metadata:
+  namespace: arbeidsforhold
+  labels:
+    team: arbeidsforhold
+spec:
+  replicas:
+    max: 2
+    min: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 32Mi
+  accessPolicy:
+    inbound:
+      rules:
+        - application: testnav-organisasjon-mottak-service
+          namespace: dolly
+  vault:
+    enabled: true

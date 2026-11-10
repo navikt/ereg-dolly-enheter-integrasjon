@@ -1,0 +1,60 @@
+name: deploy.yml
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bygg_og_deploy:
+    name: Bygg og deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Fetch all history for what-changed action
+      - uses: nais/setup@v1
+        with:
+          team: arbeidsforhold
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 25
+          distribution: temurin
+          cache: maven
+      - name: Bygg java
+        run: mvn package
+        env:
+          GITHUB_TOKEN: ${{ secrets.READER_TOKEN }}
+      - name: Sjekk hva som er endret
+        id: changed-files
+        uses: "nais/what-changed@main"
+        with:
+          files: "README.md,LICENSE,LICENSE.md,CODEOWNERS,.gitignore"
+      - name: Bygg image
+        if: steps.changed-files.outputs.changed != 'only-inputs'
+        uses: nais/docker-build-push@v0
+        id: docker-build-push
+        with:
+          team: arbeidsforhold
+          dockerfile: src/main/docker/Dockerfile
+      - name: Deploy app til q1
+        if: ${{ steps.docker-build-push.outputs.image }}
+        run: nais apply .nais/naisapp.yaml --environment dev-fss --mixin .nais/naisapp-q1.yaml --set spec.image="${{steps.docker-build-push.outputs.image}}"
+      - name: Deploy manifest til q1
+        if: ${{ !steps.docker-build-push.outputs.image }}
+        run: nais apply .nais/naisapp.yaml --environment dev-fss --mixin .nais/naisapp-q1.yaml
+      - name: Deploy app til q2
+        if: ${{ steps.docker-build-push.outputs.image }}
+        run: nais apply .nais/naisapp.yaml --environment dev-fss --mixin .nais/naisapp-q2.yaml --set spec.image="${{steps.docker-build-push.outputs.image}}"
+      - name: Deploy manifest til q2
+        if: ${{ !steps.docker-build-push.outputs.image }}
+        run: nais apply .nais/naisapp.yaml --environment dev-fss --mixin .nais/naisapp-q2.yaml
+      - name: Deploy app til q4
+        if: ${{ steps.docker-build-push.outputs.image }}
+        run: nais apply .nais/naisapp.yaml --environment dev-fss --mixin .nais/naisapp-q4.yaml --set spec.image="${{steps.docker-build-push.outputs.image}}"
+      - name: Deploy manifest til q4
+        if: ${{ !steps.docker-build-push.outputs.image }}
+        run: nais apply .nais/naisapp.yaml --environment dev-fss --mixin .nais/naisapp-q4.yaml
