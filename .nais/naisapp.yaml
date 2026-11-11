@@ -22,3 +22,9 @@ spec:
           namespace: dolly
   vault:
     enabled: true
+  filesFrom:
+    - secret: ereg-dolly-integrasjon-nais-token
+      mountPath: /var/run/secrets/nais-api
+  env:
+    - name: NAIS_SERVICE_ACCOUNT_TOKEN_PATH
+      value: /var/run/secrets/nais-api/NAIS_API_TOKEN
