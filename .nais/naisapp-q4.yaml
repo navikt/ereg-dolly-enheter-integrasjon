@@ -3,9 +3,9 @@ metadata:
 spec:
   vault:
     paths:
-      - kvPath: /oracle/data/dev/creds/aareg_q4-user
+      - kvPath: /oracle/data/dev/creds/enhetsregisteret_q4-user
         mountPath: /var/run/secrets/oracle_creds
-      - kvPath: /oracle/data/dev/config/aareg_q4
+      - kvPath: /oracle/data/dev/config/enhetsregisteret_q4
         mountPath: /var/run/secrets/oracle_config
   env:
     - name: AURA_ENVIRONMENT
