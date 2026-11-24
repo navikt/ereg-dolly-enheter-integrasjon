@@ -20,6 +20,8 @@ spec:
       rules:
         - application: testnav-organisasjon-mottak-service
           namespace: dolly
+        - application: testnav-dolly-proxy-trygdeetaten
+          namespace: dolly
   vault:
     enabled: true
   filesFrom:
