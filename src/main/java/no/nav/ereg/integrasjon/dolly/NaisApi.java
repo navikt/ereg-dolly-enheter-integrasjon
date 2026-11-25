@@ -13,9 +13,13 @@ import reactor.netty.http.client.HttpClient;
 import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -65,7 +69,17 @@ public class NaisApi {
             """;
 
     public NaisApi(@Value("${nais.api.url}") final String naisUrl, @Value("${NAIS_SERVICE_ACCOUNT_TOKEN_PATH}") final String naisTokenSti) {
-        graphqlClient = HttpGraphQlClient.builder(WebClient.builder().baseUrl(naisUrl + NaisApi.GRAPHQL_SEGMENT).filter((request, next) -> next.exchange(ClientRequest.from(request).headers(headers -> headers.setBearerAuth(hentToken(naisTokenSti))).build())).clientConnector(new ReactorClientHttpConnector(HttpClient.create().option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000).responseTimeout(Duration.ofSeconds(30)))).build()).build();
+        graphqlClient = HttpGraphQlClient.builder(WebClient.builder().baseUrl(naisUrl + NaisApi.GRAPHQL_SEGMENT).filter((request, next) -> next.exchange(ClientRequest.from(request).headers(
+                headers -> {
+                    final String token = hentToken(naisTokenSti);
+                    headers.setBearerAuth(token);
+                    try {
+                        log.info("SHA256 av nais token er {}", HexFormat.of().withUpperCase().formatHex(MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8))));
+                    } catch (NoSuchAlgorithmException e) {
+                        log.error("Kunne ikke ta hash av token, fikk en {}", e.getClass().getName());
+                    }
+                }
+        ).build())).clientConnector(new ReactorClientHttpConnector(HttpClient.create().option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000).responseTimeout(Duration.ofSeconds(30)))).build()).build();
     }
 
     private String hentToken(final String naisTokenSti) {
