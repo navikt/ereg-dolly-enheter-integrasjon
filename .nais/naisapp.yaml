@@ -22,6 +22,9 @@ spec:
           namespace: dolly
         - application: testnav-dolly-proxy-trygdeetaten
           namespace: dolly
+        - application: azure-token-generator
+          namespace: nais
+          cluster: dev-gcp
   vault:
     enabled: true
   env:
