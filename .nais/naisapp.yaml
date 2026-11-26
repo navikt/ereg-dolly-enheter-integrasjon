@@ -30,3 +30,6 @@ spec:
   env:
     - name: NAIS_SERVICE_ACCOUNT_TOKEN_PATH
       value: /var/run/secrets/nais-api/NAIS_API_TOKEN
+    - name: JDK_JAVA_OPTIONS
+      value: $(JAVA_PROXY_OPTIONS)
+  webproxy: true
